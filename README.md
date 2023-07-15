@@ -4,7 +4,7 @@ Given the names of some CS authors, this script counts the number of papers
 by each author via [DBLP](https://dblp.org/).  It outputs the sorted list of
 authors so you can see who has the most "beans" (journal + conference papers).
 
-This script was written for idle curiosity.  Please don't give any weight to
+This script was written out of idle curiosity.  Please don't give any weight to
 [bean counting](https://en.wiktionary.org/wiki/bean_counter).
 
 ## Usage
