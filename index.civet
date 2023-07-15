@@ -24,9 +24,11 @@ class Fetcher
   counts = new Map<string, Counts>
 
   authorSearch(query: string): Promise<string | undefined>
-    searchUrl := "https://dblp.org/search/author?q=#{query}"
+    searchUrl := "https://dblp.org/search/author?q=#{encodeURIComponent query}"
     $ := await fromURL searchUrl
-    people := $('li[itemtype="http://schema.org/Person"]')
+    # Restrict to first list of results (typically, "Exact matches")
+    people := $('.result-list').first()
+    .find('li[itemtype="http://schema.org/Person"]')
     let url
     # DBLP sometimes returns the author page directly
     links := $('link[title="person page HTML"]')
@@ -35,10 +37,10 @@ class Fetcher
     else
       switch people.length
         0
-          console.log "** No authors found for #{query}"
+          console.log "!! No authors found for #{query}"
           return
         > 1
-          console.log "** Multiple authors found for #{query} at #{searchUrl}"
+          console.log "!! Multiple authors found for #{query} at #{searchUrl}"
       url = people.first().find('a').attr('href')
     console.log "#{query} -> #{url}"
     url
