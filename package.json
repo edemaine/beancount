@@ -3,8 +3,9 @@
   "version": "0.0.0",
   "description": "Count number of papers via DBLP",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "prepare": "civet -c index.civet -o .js"
+    "prepare": "civet --js -c index.civet -o .js"
   },
   "repository": {
     "type": "git",
