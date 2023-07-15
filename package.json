@@ -1,0 +1,30 @@
+{
+  "name": "beancount",
+  "version": "0.0.0",
+  "description": "Count number of papers via DBLP",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edemaine/beancount.git"
+  },
+  "author": {
+    "name": "Erik Demaine",
+    "email": "edemaine@mit.edu",
+    "url": "https://erikdemaine.org/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/edemaine/beancount/issues"
+  },
+  "homepage": "https://github.com/edemaine/beancount#readme",
+  "devDependencies": {
+    "@danielx/civet": "0.6.13",
+    "@types/node": "^20.4.2"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12"
+  }
+}

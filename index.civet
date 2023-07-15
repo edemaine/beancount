@@ -1,0 +1,87 @@
+#!/usr/bin/env node
+"civet coffeeComment coffeeEq coffeeInterpolation"
+* as fs from 'node:fs'
+* as url from 'node:url'
+
+declare global
+  var fetch: typeof import('undici').fetch
+
+operator {min, max} := Math
+
+{load as loadCheerio, type Cheerio, type Element} from 'cheerio'
+function fromURL(url: string)
+  response := fetch url |> await
+  unless response.ok
+    throw new Error "Failed to fetch #{url}"
+  # "You should always be fine when waiting for at least one or two second
+  # between two consecutive requests." [https://dblp.org/faq/1474706.html]
+  await new Promise (done) => setTimeout done, 1000
+  response.text() |> await |> loadCheerio
+
+type Counts = Record<string, number>
+
+class Fetcher
+  counts = new Map<string, Counts>
+
+  authorSearch(query: string): Promise<string | undefined>
+    searchUrl := "https://dblp.org/search/author?q=#{query}"
+    $ := await fromURL searchUrl
+    people := $('li[itemtype="http://schema.org/Person"]')
+    let url
+    # DBLP sometimes returns the author page directly
+    links := $('link[title="person page HTML"]')
+    if links.length
+      url = links.first().attr('href')
+    else
+      switch people.length
+        0
+          console.log "** No authors found for #{query}"
+          return
+        > 1
+          console.log "** Multiple authors found for #{query} at #{searchUrl}"
+      url = people.first().find('a').attr('href')
+    console.log "#{query} -> #{url}"
+    url
+
+  paperCounts(name: string, url?: string)
+    return if @counts.has name
+    url ?= await @authorSearch name
+    return unless url?
+    counts: Counts := {}
+    $ := await fromURL url
+    $('div.nr').each ->
+      id := $(this).attr 'id'
+      if match := /^([a-z])(\d+)/.exec id ?? ''
+        (counts[match[1]] ??= 0) max= parseInt match[2], 10
+      else
+        console.log "Unrecognized .nr id: #{id}"
+      return
+    @counts.set name, counts
+    console.log "#{name} papers: #{counts |> Object.entries |> .map (x) => x.join ':' |> .join ', '}"
+    counts
+
+  summary()
+    totals := (
+      for [name, counts] of @counts.entries()
+        [(counts.j ?? 0) + (counts.c ?? 0), name] as const
+    ).sort (x, y) => x[0] - y[0]
+    console.log "** TOTAL PAPER COUNTS (j + c)"
+    for [total, name] of totals
+      console.log "#{total} -- #{name}"
+
+function main
+  fetcher := new Fetcher
+  for arg of process.argv[2..]
+    if stat := try await fs.promises.stat arg
+      contents := await fs.promises.readFile arg, encoding: 'utf8'
+      for let line of contents.split /(\r|\n)+/
+        line = line.trim()
+        continue unless line.length
+        await fetcher.paperCounts line
+    else
+      await fetcher.paperCounts arg
+  fetcher.summary()
+
+main() if import.meta.url.startsWith('file:') and
+          fs.realpathSync(process.argv[1]) ==
+          fs.realpathSync url.fileURLToPath import.meta.url
