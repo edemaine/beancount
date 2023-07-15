@@ -4,7 +4,7 @@
   "description": "Count number of papers via DBLP",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepare": "civet -c index.civet -o .js"
   },
   "repository": {
     "type": "git",

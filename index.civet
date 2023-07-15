@@ -72,6 +72,13 @@ class Fetcher
       console.log "#{total} -- #{name}"
 
 function main
+  if process.argv.length <= 2
+    return console.log '''
+      Usage: beancount <author-or-filename> ...
+      Each command-line argument can be a full author name (in quotes)
+      or a filename containing one author name per line.
+    '''
+
   fetcher := new Fetcher
   for arg of process.argv[2..]
     if stat := try await fs.promises.stat arg
