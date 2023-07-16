@@ -1,7 +1,7 @@
 {
   "name": "beancount",
   "version": "0.0.0",
-  "description": "Count number of papers via DBLP",
+  "description": "Count number of papers and coauthors via DBLP",
   "main": "index.js",
   "type": "module",
   "scripts": {

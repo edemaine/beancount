@@ -1,4 +1,4 @@
-# beancount: Count number of papers via DBLP
+# beancount: Count number of papers and coauthors via DBLP
 
 Given the names of some CS authors, this script measures the following metrics
 for each author via [DBLP](https://dblp.org/):
