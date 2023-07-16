@@ -1,8 +1,13 @@
 # beancount: Count number of papers via DBLP
 
-Given the names of some CS authors, this script counts the number of papers
-by each author via [DBLP](https://dblp.org/).  It outputs the sorted list of
-authors so you can see who has the most "beans" (journal + conference papers).
+Given the names of some CS authors, this script measures the following metrics
+for each author via [DBLP](https://dblp.org/):
+
+* the number of papers (journal + conference summed)
+* the number of coauthors
+
+It outputs two sorted list of authors (one for each metric)
+so you can see who has the most "beans".
 
 This script was written out of idle curiosity.  Please don't give any weight to
 [bean counting](https://en.wiktionary.org/wiki/bean_counter).

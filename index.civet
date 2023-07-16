@@ -18,10 +18,16 @@ function fromURL(url: string)
   await new Promise (done) => setTimeout done, 1000
   response.text() |> await |> loadCheerio
 
-type Counts = Record<string, number>
+type PaperCounts = Record<string, number>
+
+class Author
+  name?: string
+  url?: string
+  paperCounts?: PaperCounts
+  coauthorCount?: number
 
 class Fetcher
-  counts = new Map<string, Counts>
+  authors = new Map<string, Author>
 
   authorSearch(query: string): Promise<string | undefined>
     searchUrl := "https://dblp.org/search/author?q=#{encodeURIComponent query}"
@@ -45,31 +51,68 @@ class Fetcher
     console.log "#{query} -> #{url}"
     url
 
-  paperCounts(name: string, url?: string)
-    return if @counts.has name
+  authorFetch(name: string, url?: string)
+    return if @authors.has name
     url ?= await @authorSearch name
     return unless url?
-    counts: Counts := {}
+
+    paperCounts: PaperCounts := {}
     $ := await fromURL url
     $('div.nr').each ->
       id := $(this).attr 'id'
       if match := /^([a-z])(\d+)/.exec id ?? ''
-        (counts[match[1]] ??= 0) max= parseInt match[2], 10
+        (paperCounts[match[1]] ??= 0) max= parseInt match[2], 10
       else
         console.log "Unrecognized .nr id: #{id}"
       return
-    @counts.set name, counts
-    console.log "#{name} papers: #{counts |> Object.entries |> .map (x) => x.join ':' |> .join ', '}"
-    counts
 
-  summary()
-    totals := (
-      for [name, counts] of @counts.entries()
-        [(counts.j ?? 0) + (counts.c ?? 0), name] as const
+    coauthorCount .= 0
+    $('#coauthor-section a[title="show joint publications"]').each ->
+      number := parseInt $(this).text(), 10
+      if isNaN number
+        console.log "Unrecognized coauthor tag: #{$(this).html()}"
+      else
+        coauthorCount max= number
+      return
+    unless coauthorCount
+      console.log "No coauthors found for #{name}"
+
+    author := {name, url, paperCounts, coauthorCount}
+    @authors.set name, author
+    @summarizeAuthor name
+    author
+
+  summarizeAuthor(name: string)
+    author := @authors.get name
+    return unless author?
+    {paperCounts, coauthorCount} := author
+    console.log "#{name} -- coauthors #{coauthorCount}; papers #{paperCounts ?? {} |> Object.entries |> .map (x) => x.join ':' |> .join ', '}"
+
+  summarizeGeneric(title: string, valueOf: (author: Author) => number | undefined)
+    # CIVET: should not need parentheses
+    values := (
+      for author of @authors.values()
+        value := valueOf author
+        continue unless value?
+        [value, author.name] as const
     ).sort (x, y) => x[0] - y[0]
-    console.log "** TOTAL PAPER COUNTS (j + c)"
-    for [total, name] of totals
-      console.log "#{total} -- #{name}"
+    console.log ''
+    console.log "** #{title}"
+    for [value, name] of values
+      console.log "#{value} -- #{name}"
+    return
+
+  summarizePaperCounts()
+    @summarizeGeneric "TOTAL PAPER COUNT (j + c)", ({paperCounts}) =>
+      return unless paperCounts?
+      (paperCounts.j ?? 0) + (paperCounts.c ?? 0)
+
+  summarizeCoauthorCount()
+    @summarizeGeneric "COAUTHOR COUNT", ({coauthorCount}) => coauthorCount
+
+  summarize()
+    @summarizePaperCounts()
+    @summarizeCoauthorCount()
 
 function main
   if process.argv.length <= 2
@@ -86,10 +129,10 @@ function main
       for let line of contents.split /(\r|\n)+/
         line = line.trim()
         continue unless line.length
-        await fetcher.paperCounts line
+        await fetcher.authorFetch line
     else
-      await fetcher.paperCounts arg
-  fetcher.summary()
+      await fetcher.authorFetch arg
+  fetcher.summarize()
 
 main() if import.meta.url.startsWith('file:') and
           fs.realpathSync(process.argv[1]) ==
