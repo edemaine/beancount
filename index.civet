@@ -89,13 +89,12 @@ class Fetcher
     console.log "#{name} -- coauthors #{coauthorCount}; papers #{paperCounts ?? {} |> Object.entries |> .map (x) => x.join ':' |> .join ', '}"
 
   summarizeGeneric(title: string, valueOf: (author: Author) => number | undefined)
-    # CIVET: should not need parentheses
-    values := (
+    values :=
       for author of @authors.values()
         value := valueOf author
         continue unless value?
         [value, author.name] as const
-    ).sort (x, y) => x[0] - y[0]
+      .sort (x, y) => x[0] - y[0]
     console.log ''
     console.log "** #{title}"
     for [value, name] of values
