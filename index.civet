@@ -29,7 +29,7 @@ class Author
 class Fetcher
   authors = new Map<string, Author>
 
-  authorSearch(query: string): Promise<string | undefined>
+  authorSearch(query: string): Promise<string?>
     searchUrl := "https://dblp.org/search/author?q=#{encodeURIComponent query}"
     $ := await fromURL searchUrl
     # Restrict to first list of results (typically, "Exact matches")
@@ -61,7 +61,7 @@ class Fetcher
     $('div.nr').each ->
       id := $(this).attr 'id'
       if match := /^([a-z])(\d+)/.exec id ?? ''
-        (paperCounts[match[1]] ??= 0) max= parseInt match[2], 10
+        (paperCounts[match[1]] ??= 0) max= Number match[2]
       else
         console.log "Unrecognized .nr id: #{id}"
       return
@@ -86,9 +86,9 @@ class Fetcher
     author := @authors.get name
     return unless author?
     {paperCounts, coauthorCount} := author
-    console.log "#{name} -- coauthors #{coauthorCount}; papers #{paperCounts ?? {} |> Object.entries |> .map (x) => x.join ':' |> .join ', '}"
+    console.log "#{name} -- coauthors #{coauthorCount}; papers #{paperCounts ?? {} |> Object.entries |> .map (.join ':') |> .join ', '}"
 
-  summarizeGeneric(title: string, valueOf: (author: Author) => number | undefined)
+  summarizeGeneric(title: string, valueOf: (author: Author) => number?)
     values :=
       for author of @authors.values()
         value := valueOf author
