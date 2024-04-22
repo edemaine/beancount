@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "prepare": "civet --js -c index.civet -o .js"
+    "prepare": "civet --no-config --js -c index.civet -o .js"
   },
   "repository": {
     "type": "git",
